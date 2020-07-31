@@ -1,6 +1,7 @@
 package com.hand.api.controller.v1;
 
 import com.hand.api.utils.PrincipalUtil;
+import com.hand.app.service.SoHeaderService;
 import com.hand.config.SwaggerApiConfig;
 import io.choerodon.core.oauth.CustomUserDetails;
 import io.choerodon.mybatis.annotation.VersionAudit;
@@ -38,6 +39,9 @@ import java.security.Principal;
 public class SoHeaderController extends BaseController {
 
     @Autowired
+    private SoHeaderService soHeaderService;
+
+    @Autowired
     private SoHeaderRepository soHeaderRepository;
 
     @Autowired
@@ -73,70 +77,18 @@ public class SoHeaderController extends BaseController {
         return Results.success(soHeader);
     }
 
+    /**
+     * 修改订单状态
+     * @param soHeader
+     * @param principal
+     * @return
+     */
     @ApiOperation(value = "修改")
     @Permission(level = ResourceLevel.SITE)
     @PutMapping
     public ResponseEntity<String> update(@RequestBody SoHeader soHeader, Principal principal) {
-        /*SecurityTokenHelper.validToken(soHeader);
-        soHeaderRepository.updateByPrimaryKeySelective(soHeader);
-        return Results.success(soHeader);*/
-
-        //通过传过来要修改的ID查询原始的订单头数据
-        SoHeader soHeader1 = soHeaderRepository.selectByPrimaryKey(soHeader.getSoHeaderId());
-        if (soHeader1 == null) {
-            throw new RuntimeException("当前订单不存在");
-        }
-        if (!soHeader1.getCreatedBy().equals(soHeader.getCreatedBy())) {
-            throw new RuntimeException("当前用户与创建人不一致");
-           /* PrincipalUtil principalUtil = new PrincipalUtil(principal);
-            CustomUserDetails details = principalUtil.getDetails();
-            details.getRoleId();
-            details.getUsername();*/
-
-        }
-        if (!soHeader1.getOrderStatus().equals("NEW") && !soHeader1.getOrderStatus().equals("REJECTED")) {
-            throw new RuntimeException("订单状态不能修改");
-        }
-        //不可以对订单编号进行更改
-        soHeader.setOrderNumber(soHeader1.getOrderNumber());
-
-        //不再输入ObjectVersionNumber
-        soHeader.setObjectVersionNumber(soHeader1.getObjectVersionNumber());
-        //不必再输入tokenID
-        soHeader.set_token(soHeader1.get_token());
-        //set相应的Status状态
-        if (soHeader.getOrderStatus().equals("SUBMITED") || soHeader.getOrderStatus().equals("APPROVED")
-                || soHeader.getOrderStatus().equals("REJECTED")) {
-            //tokenId数据验证
-            SecurityTokenHelper.validToken(soHeader);
-            soHeaderRepository.updateByPrimaryKeySelective(soHeader);
-            return Results.success("修改订单头成功！");
-        } else {
-            throw new RuntimeException("动作状态编码错误");
-        }
-
+        return soHeaderService.updateStatus(soHeader, principal);
     }
-
-    /*@ApiOperation(value = "根据订单头ID进行更新订单的状态表")
-    @Permission(level = ResourceLevel.SITE)
-    @GetMapping("/updateStatus")
-    public void updateByHeaderId(@RequestBody String soHeaderId, @RequestBody String createdBy, @RequestBody String orderStatus) {
-        SoHeader soHeader1 = soHeaderRepository.selectByPrimaryKey(soHeaderId);
-        if (soHeader1 != null) {
-            if (soHeader1.getCreatedBy() == createdBy) {
-                if (soHeader1.getOrderStatus().equals("NEW") || soHeader1.getOrderStatus().equals("REJECTED")) {
-                    soHeader1.setOrderStatus(orderStatus);
-                    soHeaderRepository.updateByPrimaryKeySelective(soHea der1);
-                } else {
-                    throw new RuntimeException("订单状态不能修改");
-                }
-            } else {
-                throw new RuntimeException("当前用户与创建人不一致");
-            }
-        } else {
-            throw new RuntimeException("当前订单不存在");
-        }
-    }*/
 
 
     @ApiOperation(value = "删除")

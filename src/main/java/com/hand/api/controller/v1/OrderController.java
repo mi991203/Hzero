@@ -88,6 +88,7 @@ public class OrderController extends BaseController {
             throw new RuntimeException("订单状态不能修改");
         }
         if (list.size() != 0) {
+            //遍历
             for (SoLine soLine : list) {
                 SoLine soLine1 = soLineRepository.selectByPrimaryKey(soLine.getSoLineId());
                 soLine.set_token(soLine1.get_token());
@@ -98,11 +99,7 @@ public class OrderController extends BaseController {
         }
     }
 
-    /**
-     * @param organizationId
-     * @param soHeaderId
-     * @return
-     */
+
     @ApiOperation(value = "根据订单头ID删除订单")
     @Permission(level = ResourceLevel.SITE)
     @DeleteMapping("/deleteId")
@@ -134,7 +131,7 @@ public class OrderController extends BaseController {
 
 
     /**
-     * 待完成
+     * 已完成
      *
      * @param organizationId
      * @param order
@@ -145,29 +142,72 @@ public class OrderController extends BaseController {
     @PostMapping("/addOrder")
     public Order addOrder(@PathVariable Long organizationId,
                           @RequestBody Order order) {
-        SoHeader soHeader = new SoHeader();
-        String code = codeRuleBuilder.generateCode(ORDERNUMBER, null);
-        soHeader.setOrderNumber(code);
-        soHeader.setCompanyId(order.getCompanyId());
-        soHeader.setOrderDate(order.getOrderDate());
-        soHeader.setOrderStatus(order.getOrderStatus());
-        soHeader.setCustomerId(order.getCustomerId());
-        soHeader.set_token(order.get_token());
-        validObject(soHeader);
-        //这个地方soHeaderId自动填充
-        soHeaderRepository.insertSelective(soHeader);
-        //将这个处理过得soHeader传递进orderResult
-        order.setSoHeaderId(soHeader.getSoHeaderId());
-        
-        List<SoLine> list = order.getList();
-        int index = 0;
-        for (SoLine soLine :
-                list) {
-            soLine.setSoHeaderId(soHeader.getSoHeaderId());
-            validObject(soLine);
-            soLineRepository.insertSelective(soLine);
-            order.getList().get(index).setSoLineId(soLine.getSoLineId());
-            index++;
+        //如果order的SoHeaderId不为空
+        if (order.getSoHeaderId() != null) {
+            //当订单头不为空，表示更新订单头
+            SoHeader soHeader = soHeaderRepository.selectByPrimaryKey(order.getSoHeaderId());
+            if (order.getObjectVersionNumber() != null) {
+                throw new RuntimeException("object_version_number为空");
+            } else if (order.getObjectVersionNumber() != soHeader.getObjectVersionNumber()) {
+                throw new RuntimeException("object_version_number不一致");
+            } else {
+                if ("NEW".equals(soHeader.getOrderStatus()) ||  "REJECTED".equals(soHeader.getOrderStatus())) {
+                    soHeaderRepository.updateByPrimaryKeySelective(soHeader);
+                }else {
+                    throw new RuntimeException("当钱包订单状态无法更改");
+                }
+            }
+        } else {
+            //因为当soHeaderId为空的时候
+            //将原order中对象中的关于SoHeader信息取出
+            SoHeader soHeader = new SoHeader();
+            //订单号按照编码规则生成并设置到soHeader
+            String code = codeRuleBuilder.generateCode(ORDERNUMBER, null);
+            soHeader.setOrderNumber(code);
+            soHeader.setCompanyId(order.getCompanyId());
+            soHeader.setOrderDate(order.getOrderDate());
+            //使orderStatus默认是NEW
+            if (order.getOrderStatus() != null) {
+                soHeader.setOrderStatus(order.getOrderStatus());
+            } else {
+                soHeader.setOrderStatus("NEW");
+            }
+            soHeader.setCustomerId(order.getCustomerId());
+            soHeader.set_token(order.get_token());
+            //校验soHeader对象
+            validObject(soHeader);
+            //这个地方soHeaderId自动填充
+            soHeaderRepository.insertSelective(soHeader);
+            //将这个处理过得soHeader传递进orderResult
+            order.setSoHeaderId(soHeader.getSoHeaderId());
+            //insert有关SoLine
+            List<SoLine> list = order.getList();
+            int index = 0;
+            for (SoLine soLine :
+                    list) {
+                //判断当前输入的soLine对象的soLineId是否为空，为空是添加，不为空是更新
+                if(soLine.getSoLineId() != null){
+                    SoLine soLine1 = soLineRepository.selectByPrimaryKey(soLine.getSoLineId());
+                    //更新
+                    if (soLine.getObjectVersionNumber() != null) {
+                        if (soLine1.getObjectVersionNumber() == soLine.getObjectVersionNumber()){
+                            soLineRepository.updateByPrimaryKey(soLine);
+                            index++;
+                        }else {
+                            throw new RuntimeException("当前obejct_version_number不匹配");
+                        }
+                    }else {
+                        throw new RuntimeException("当前obejct_version_number为空");
+                    }
+                }else {
+                    //添加
+                    soLine.setSoHeaderId(soHeader.getSoHeaderId());
+                    validObject(soLine);
+                    soLineRepository.insertSelective(soLine);
+                    order.getList().get(index).setSoLineId(soLine.getSoLineId());
+                    index++;
+                }
+            }
         }
         return order;
     }

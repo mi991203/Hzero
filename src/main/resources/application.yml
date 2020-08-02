@@ -16,6 +16,9 @@ hzero:
       name: htdo
       path: /todo/**
       service-name: hzero-order-28263
+  lov:
+    sql:
+      enabled: true
 
 eureka:
   instance:

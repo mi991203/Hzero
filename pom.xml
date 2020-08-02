@@ -16,6 +16,15 @@
 
 
     <dependencies>
+        <!--值集jar包 -->
+        <dependency>
+            <groupId>org.hzero.boot</groupId>
+            <artifactId>hzero-boot-platform</artifactId>
+            <version>${hzero.boot.version}</version>
+        </dependency>
+
+
+
         <!--hzero-->
         <dependency>
             <groupId>org.hzero.boot</groupId>

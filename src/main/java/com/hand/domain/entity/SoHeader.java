@@ -60,6 +60,7 @@ public class SoHeader extends AuditDomain {
     @ApiModelProperty(value = "",required = true)
     @NotBlank
     private String orderStatus;
+    private String orderStatusMeaning;
     @ApiModelProperty(value = "",required = true)
     @NotNull
     private Long customerId;

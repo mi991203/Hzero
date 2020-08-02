@@ -38,6 +38,7 @@ public class OrderServiceImpl extends BaseAppService implements OrderService {
     private SoLineRepository soLineRepository;
     @Autowired
     private CodeRuleBuilder codeRuleBuilder;
+
     private final String ORDERNUMBER = "HZERO.28263.ORDER.NUMBER";
 
     /**
@@ -98,7 +99,7 @@ public class OrderServiceImpl extends BaseAppService implements OrderService {
     /**
      * 根据订单头删除订单
      * @param soHeaderId 订单头
-     * @return 返回信息
+     * @return 返回订单信息
      */
     @Override
     public ResponseEntity<String> deleteOrder(Long organizationId, Long soHeaderId) {

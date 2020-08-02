@@ -20,6 +20,7 @@ public class SwaggerApiConfig {
 	public static final String SOLINE = "SoLine";
 	public static final String ORDER = "ORDER";
 	public static final String ORDERDETAILS = "OrderDetalis";
+	public static final String LOVLIST = "LovList";
 
 
 	@Autowired
@@ -31,7 +32,8 @@ public class SwaggerApiConfig {
 				new Tag(SOHEADGER, "销售订单头"),
 				new Tag(SOLINE, "销售订单行"),
 				new Tag(ORDER, "订单汇总操作"),
-				new Tag(ORDERDETAILS, "订单明细")
+				new Tag(ORDERDETAILS, "订单明细"),
+				new Tag(LOVLIST, "LOV测试")
 		);
 	}
 }

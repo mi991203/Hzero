@@ -24,7 +24,6 @@ import java.security.Principal;
 public class SoHeaderServiceImpl implements SoHeaderService {
     @Autowired
     private SoHeaderRepository soHeaderRepository;
-
     @Autowired
     private RemoteRoleService remoteRoleService;
 
@@ -53,6 +52,12 @@ public class SoHeaderServiceImpl implements SoHeaderService {
      */
     public static final String CLOSED = "CLOSED";
 
+    /**
+     * 更改订单的状态
+     * @param soHeader 订单头消息
+     * @param principal
+     * @return
+     */
     @Override
     public ResponseEntity<String> updateStatus(SoHeader soHeader, Principal principal) {
         //通过传过来要修改的ID查询原始的订单头数据
